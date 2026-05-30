@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile | India Temple Heritage</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .profile-card {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            padding: 30px;
+        }
+        .avatar {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--gold-main), var(--teal-light));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #0a1628;
+            flex-shrink: 0;
+        }
+        .profile-info { flex: 1; }
+        .profile-info h2 { margin-bottom: 8px; font-size: 1.8rem; }
+        .info-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+        .info-label {
+            color: var(--teal-light);
+            font-weight: 600;
+            min-width: 80px;
+        }
+        .info-value { color: var(--text-light); }
+        .password-dots { letter-spacing: 3px; font-size: 1.2rem; }
+        .section-heading {
+            font-size: 1.4rem;
+            color: var(--gold-main);
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+            grid-column: 1 / -1;
+        }
+        .empty-state .icon { font-size: 3rem; margin-bottom: 10px; }
+        .saved-badge {
+            display: inline-block;
+            background: rgba(212,175,55,0.15);
+            color: var(--gold-main);
+            border: 1px solid var(--gold-main);
+            border-radius: 20px;
+            padding: 2px 12px;
+            font-size: 0.8rem;
+            margin-left: 8px;
+        }
+        @media (max-width: 600px) {
+            .profile-card { flex-direction: column; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav-bar container">
+        <a href="index.html" class="nav-brand">India<span class="text-gradient">Temple</span></a>
+        <div class="nav-links" id="navLinks">
+            <a href="temples.html">Explore Temples</a>
+        </div>
+    </nav>
+
+    <div class="container mt-4 mb-4">
+
+        <!-- Profile Card -->
+        <div class="glass-panel mb-4">
+            <div class="profile-card">
+                <div class="avatar" id="avatarInitial">?</div>
+                <div class="profile-info">
+                    <h2 id="profileName">Loading...</h2>
+                    <div class="info-row">
+                        <span class="info-label">📧 Email</span>
+                        <span class="info-value" id="profileEmail">—</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">🔒 Password</span>
+                        <span class="info-value password-dots">••••••••••</span>
+                        <span style="font-size:0.8rem; color:var(--text-muted);">(hidden for security)</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">👤 Role</span>
+                        <span class="info-value" id="profileRole">—</span>
+                    </div>
+                </div>
+                <button class="btn btn-outline" onclick="userLogout()" style="align-self: flex-start;">Logout</button>
+            </div>
+        </div>
+
+        <!-- Saved / Liked Temples -->
+        <h3 class="section-heading">
+            ♥ My Saved Temples
+            <span class="saved-badge" id="savedCount">0</span>
+        </h3>
+        <div class="grid-3" id="savedTemplesGrid">
+            <div class="empty-state">
+                <div class="icon">🛕</div>
+                <p>Loading your saved temples...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const token = localStorage.getItem('userToken');
+            if (!token) {
+                sessionStorage.setItem('returnTo', 'profile.html');
+                window.location.href = 'auth.html';
+                return;
+            }
+
+            try {
+                const res = await fetch('http://localhost:5000/api/users/me', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!res.ok) {
+                    localStorage.removeItem('userToken');
+                    window.location.href = 'auth.html';
+                    return;
+                }
+                const user = await res.json();
+                document.getElementById('avatarInitial').innerText = user.name ? user.name.charAt(0).toUpperCase() : '?';
+                document.getElementById('profileName').innerText = user.name || '—';
+                document.getElementById('profileEmail').innerText = user.email || '—';
+                document.getElementById('profileRole').innerText = user.role === 'admin' ? '⭐ Admin' : '🙏 Pilgrim';
+            } catch (err) {
+                console.error(err);
+            }
+
+            try {
+                const res = await fetch('http://localhost:5000/api/users/saved-temples', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('userToken')}` }
+                });
+                const temples = await res.json();
+                const grid = document.getElementById('savedTemplesGrid');
+                const badge = document.getElementById('savedCount');
+                badge.innerText = temples.length;
+                if (!Array.isArray(temples) || temples.length === 0) {
+                    grid.innerHTML = `<div class="empty-state"><div class="icon">🛕</div><p>You haven't saved any temples yet.</p><a href="temples.html" class="btn btn-outline" style="margin-top:15px;">Explore Temples</a></div>`;
+                    return;
+                }
+                grid.innerHTML = temples.map(t => `
+                    <div class="glass-panel" style="display:flex; flex-direction:column;">
+                        <h3 style="font-size:1.3rem; margin-bottom:5px;">${t.name}</h3>
+                        <p style="color:var(--gold-main); font-weight:600; margin-bottom:10px;">${t.city}, ${t.state}</p>
+                        <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:15px; flex:1;">${t.history ? t.history.substring(0, 100) + '...' : ''}</p>
+                        <div style="display:flex; gap:10px;">
+                            <a href="temple-details.html?id=${t._id}" class="btn btn-outline" style="flex:1; text-align:center;">View</a>
+                            <button onclick="unsaveTemple('${t._id}', this)" class="btn" style="background:rgba(255,0,0,0.2); color:#ff6b6b; border:1px solid #ff6b6b; padding:8px 12px;">✕ Remove</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (err) {
+                console.error(err);
+            }
+        });
+
+        async function unsaveTemple(templeId, btn) {
+            const token = localStorage.getItem('userToken');
+            try {
+                const res = await fetch(`http://localhost:5000/api/users/save-temple/${templeId}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    btn.closest('.glass-panel').remove();
+                    const badge = document.getElementById('savedCount');
+                    const newCount = parseInt(badge.innerText) - 1;
+                    badge.innerText = newCount;
+                    if (newCount === 0) {
+                        document.getElementById('savedTemplesGrid').innerHTML = `<div class="empty-state"><div class="icon">🛕</div><p>You haven't saved any temples yet.</p><a href="temples.html" class="btn btn-outline" style="margin-top:15px;">Explore Temples</a></div>`;
+                    }
+                }
+            } catch (err) { console.error(err); }
+        }
+    </script>
+</body>
+</html>

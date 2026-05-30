@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>India Temple Heritage Portal</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="nav-bar container">
+        <a href="index.html" class="nav-brand">India<span class="text-gradient">Temple</span></a>
+        <div class="nav-links" id="navLinks">
+            <a href="temples.html">Explore Temples</a>
+            <a href="admin.html">Admin</a>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div class="container">
+            <h1>Discover Divine Heritage</h1>
+            <p>Explore the sacred temples, timeless rituals, and historic pilgrimage routes of India.</p>
+            <div class="glass-panel" style="max-width: 600px; margin: 0 auto; display: flex; gap: 10px;">
+                <input type="text" id="searchInput" class="form-control" placeholder="Search by Temple Name, City, or Deity..." style="margin: 0; flex: 1;">
+                <button class="btn btn-primary" onclick="searchTemples()">Search</button>
+            </div>
+        </div>
+    </header>
+
+    <section class="container mt-4 mb-4">
+        <h2 class="text-center mb-4">Featured Temples</h2>
+        <div class="grid-3" id="featuredGrid">
+            <!-- Featured Temples will be injected here via JS -->
+            <div class="text-center" style="width: 100%; grid-column: 1 / -1; color: var(--text-muted);">Loading featured temples...</div>
+        </div>
+    </section>
+
+    
+    <section class="container mt-4 mb-4">
+        <h2 class="text-center mb-4">Popular Pilgrimage Circuits</h2>
+        <div class="grid-2" id="circuitsGrid">
+            <!-- Circuits injected here -->
+        </div>
+    </section>
+
+    <script src="js/main.js"></script>
+    <script>
+        // Specific logic for index.html to fetch featured
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchFeaturedTemples();
+            fetchCircuits();
+        });
+
+        function searchTemples() {
+            const query = document.getElementById('searchInput').value;
+            window.location.href = `temples.html?search=${encodeURIComponent(query)}`;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explore Temples | India Temple Heritage Portal</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .filter-sidebar {
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 20px;
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+        .main-content {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+        @media (max-width: 768px) {
+            .main-content { grid-template-columns: 1fr; }
+        }
+        .location-card {
+            background: rgba(100,200,180,0.08);
+            border: 1px solid var(--teal-light);
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 15px;
+        }
+        .location-card h4 { color: var(--teal-light); margin-bottom: 10px; font-size: 1rem; }
+        .near-me-btn {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--teal-light);
+            background: rgba(100,200,180,0.1);
+            color: var(--teal-light);
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .near-me-btn:hover { background: rgba(100,200,180,0.2); }
+        .near-me-btn.active { background: var(--teal-light); color: #0a1628; }
+        .location-status {
+            font-size: 0.8rem;
+            margin-top: 8px;
+            min-height: 18px;
+        }
+        .distance-badge {
+            display: inline-block;
+            background: rgba(100,200,180,0.15);
+            color: var(--teal-light);
+            border: 1px solid var(--teal-light);
+            border-radius: 20px;
+            padding: 2px 10px;
+            font-size: 0.75rem;
+            margin-bottom: 8px;
+        }
+        .state-select {
+            width: 100%;
+            background: var(--bg-card);
+            color: var(--text-light);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 0.9rem;
+            margin-bottom: 12px;
+        }
+        .filter-section-title {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            margin-top: 15px;
+        }
+        .temple-card {
+            display: flex;
+            flex-direction: column;
+        }
+        .temple-card-header { margin-bottom: 8px; }
+        .temple-card-body { flex: 1; }
+        .no-results {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+        .no-results .icon { font-size: 3rem; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <nav class="nav-bar container">
+        <a href="index.html" class="nav-brand">India<span class="text-gradient">Temple</span></a>
+        <div class="nav-links" id="navLinks">
+            <a href="temples.html">Explore Temples</a>
+            <a href="admin.html">Admin</a>
+        </div>
+    </nav>
+
+    <div class="container mt-4 mb-4">
+        <h2 class="mb-4">Explore Temples of India</h2>
+
+        <div class="main-content">
+            <!-- Sidebar Filters -->
+            <aside class="filter-sidebar">
+                <h3 style="margin-bottom:15px; font-size:1.1rem; color:var(--gold-main);">🔍 Search & Filter</h3>
+
+                <div class="filter-section-title">Keyword</div>
+                <input type="text" id="filterSearch" class="form-control"
+                    placeholder="Temple name, city, deity..."
+                    onkeydown="if(event.key==='Enter') applyFilters()">
+
+                <div class="filter-section-title">State / Region</div>
+                <select id="filterState" class="state-select">
+                    <option value="">All States</option>
+                </select>
+
+                <div class="filter-section-title">Deity</div>
+                <input type="text" id="filterDeity" class="form-control"
+                    placeholder="e.g. Shiva, Vishnu, Durga"
+                    onkeydown="if(event.key==='Enter') applyFilters()">
+
+                <hr style="border:0; border-top:1px solid var(--glass-border); margin:15px 0;">
+
+                <!-- Location Discovery -->
+                <div class="location-card">
+                    <h4>📍 Near Me</h4>
+                    <div class="filter-section-title" style="margin-top:0;">Search radius</div>
+                    <div style="display:flex; gap:8px; align-items:center; margin-bottom:10px;">
+                        <input type="range" id="filterRadius" min="10" max="500" value="50"
+                            style="flex:1;" oninput="document.getElementById('radiusVal').innerText=this.value + ' km'">
+                        <span id="radiusVal" style="color:var(--teal-light); font-weight:bold; min-width:50px;">50 km</span>
+                    </div>
+                    <button class="near-me-btn" id="nearMeBtn" onclick="findNearMe()">
+                        📍 Find Temples Near Me
+                    </button>
+                    <div class="location-status" id="locationMsg"></div>
+                </div>
+
+                <button class="btn btn-primary" style="width:100%; margin-top:5px;" onclick="applyFilters()">
+                    Apply Filters
+                </button>
+                <button class="btn btn-outline" style="width:100%; margin-top:8px;" onclick="clearFilters()">
+                    Clear All
+                </button>
+            </aside>
+
+            <!-- Results -->
+            <div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
+                    <p id="resultsCount" style="color:var(--text-muted); margin:0;">Loading...</p>
+                    <div id="locationBadge" style="display:none;">
+                        <span class="distance-badge">📍 Sorted by distance</span>
+                    </div>
+                </div>
+                <div class="grid-2" id="templesGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script>
+        const API = 'http://localhost:5000/api';
+        let currentLat = null;
+        let currentLng = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadStates();
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('search')) {
+                document.getElementById('filterSearch').value = urlParams.get('search');
+            }
+            if (urlParams.has('state')) {
+                document.getElementById('filterState').value = urlParams.get('state');
+            }
+            applyFilters();
+        });
+
+        async function loadStates() {
+            try {
+                const res    = await fetch(`${API}/temples/states`);
+                const states = await res.json();
+                const select = document.getElementById('filterState');
+                states.forEach(s => {
+                    const opt     = document.createElement('option');
+                    opt.value     = s;
+                    opt.innerText = s;
+                    select.appendChild(opt);
+                });
+            } catch (err) {
+                console.error('Could not load states:', err);
+            }
+        }
+
+        function findNearMe() {
+            const btn = document.getElementById('nearMeBtn');
+            const msg = document.getElementById('locationMsg');
+
+            if (!navigator.geolocation) {
+                msg.innerText   = '❌ Geolocation not supported.';
+                msg.style.color = 'red';
+                return;
+            }
+
+            btn.innerText = '⏳ Getting location...';
+            btn.disabled  = true;
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    currentLat = position.coords.latitude;
+                    currentLng = position.coords.longitude;
+                    btn.innerText = '✅ Location Found';
+                    btn.classList.add('active');
+                    btn.disabled  = false;
+                    msg.innerText = `📍 ${currentLat.toFixed(4)}, ${currentLng.toFixed(4)}`;
+                    msg.style.color = 'var(--teal-light)';
+                    document.getElementById('locationBadge').style.display = 'block';
+                    applyFilters();
+                },
+                (error) => {
+                    btn.innerText = '📍 Find Temples Near Me';
+                    btn.disabled  = false;
+                    btn.classList.remove('active');
+                    const msgs = {
+                        1: '❌ Permission denied. Please allow location.',
+                        2: '❌ Location unavailable.',
+                        3: '❌ Timed out. Try again.'
+                    };
+                    msg.innerText   = msgs[error.code] || '❌ Location error.';
+                    msg.style.color = 'red';
+                }
+            );
+        }
+
+        async function applyFilters() {
+            const search = document.getElementById('filterSearch').value.trim();
+            const state  = document.getElementById('filterState').value;
+            const deity  = document.getElementById('filterDeity').value.trim();
+            const radius = document.getElementById('filterRadius').value || 50;
+            const grid   = document.getElementById('templesGrid');
+            const countEl = document.getElementById('resultsCount');
+
+            grid.innerHTML = '<p style="color:var(--text-muted); grid-column:1/-1;">Loading temples...</p>';
+
+            let url = `${API}/temples?`;
+            if (search)  url += `search=${encodeURIComponent(search)}&`;
+            if (state)   url += `state=${encodeURIComponent(state)}&`;
+            if (deity)   url += `deity=${encodeURIComponent(deity)}&`;
+            if (currentLat && currentLng) {
+                url += `lat=${currentLat}&lng=${currentLng}&radius=${radius}&`;
+            }
+
+            try {
+                const res     = await fetch(url);
+                const temples = await res.json();
+
+                countEl.innerText = `Showing ${temples.length} temple${temples.length !== 1 ? 's' : ''}`;
+
+                if (!temples.length) {
+                    grid.innerHTML = `
+                        <div class="no-results">
+                            <div class="icon">🛕</div>
+                            <p>No temples found matching your criteria.</p>
+                            <button class="btn btn-outline" style="margin-top:15px;" onclick="clearFilters()">Clear Filters</button>
+                        </div>`;
+                    return;
+                }
+
+                grid.innerHTML = temples.map(t => `
+                    <div class="glass-panel temple-card">
+                        <div class="temple-card-header">
+                            ${t.distance !== undefined ? `<span class="distance-badge">📍 ${t.distance} km away</span>` : ''}
+                            ${t.isFeatured ? `<span style="background:rgba(212,175,55,0.15); color:var(--gold-main); border:1px solid var(--gold-main); border-radius:20px; padding:2px 10px; font-size:0.75rem; margin-left:4px;">⭐ Featured</span>` : ''}
+                        </div>
+                        <div class="temple-card-body">
+                            <h3 style="font-size:1.4rem; margin-bottom:5px;">${t.name}</h3>
+                            <p style="color:var(--gold-main); font-weight:600; margin-bottom:8px;">📍 ${t.city}, ${t.state}</p>
+                            ${t.deities && t.deities.length ? `<p style="color:var(--teal-light); font-size:0.85rem; margin-bottom:8px;">🙏 ${t.deities.join(', ')}</p>` : ''}
+                            <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:15px;">
+                                ${t.history ? t.history.substring(0, 120) + '...' : ''}
+                            </p>
+                            ${t.averageRating ? `<p style="font-size:0.85rem; color:var(--gold-main); margin-bottom:10px;">⭐ ${t.averageRating}/5</p>` : ''}
+                        </div>
+                        <a href="temple-details.html?id=${t._id}" class="btn btn-outline" style="text-align:center;">View Details</a>
+                    </div>
+                `).join('');
+
+            } catch (err) {
+                console.error(err);
+                grid.innerHTML = '<p style="color:red; grid-column:1/-1;">Error loading temples. Is the server running?</p>';
+                countEl.innerText = 'Error';
+            }
+        }
+
+        function clearFilters() {
+            document.getElementById('filterSearch').value  = '';
+            document.getElementById('filterState').value   = '';
+            document.getElementById('filterDeity').value   = '';
+            document.getElementById('filterRadius').value  = '50';
+            document.getElementById('radiusVal').innerText = '50 km';
+            document.getElementById('locationMsg').innerText = '';
+            document.getElementById('locationBadge').style.display = 'none';
+            document.getElementById('nearMeBtn').classList.remove('active');
+            document.getElementById('nearMeBtn').innerText = '📍 Find Temples Near Me';
+            currentLat = null;
+            currentLng = null;
+            applyFilters();
+        }
+    </script>
+</body>
+</html>

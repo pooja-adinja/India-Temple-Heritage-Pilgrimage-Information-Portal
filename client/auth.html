@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login / Register | India Temple Heritage</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .auth-container { max-width: 420px; margin: 40px auto; }
+        .auth-tabs { display: flex; margin-bottom: 20px; }
+        .auth-tab {
+            flex: 1; padding: 10px; text-align: center; cursor: pointer;
+            border-bottom: 2px solid transparent; color: var(--text-muted); font-weight: bold;
+            transition: all 0.2s;
+        }
+        .auth-tab.active { color: var(--gold-main); border-bottom-color: var(--gold-main); }
+        .auth-form { display: none; }
+        .auth-form.active { display: block; }
+        .field-wrap { margin-bottom: 16px; }
+        .field-wrap label {
+            display: block; margin-bottom: 5px;
+            font-size: 0.9rem; color: var(--teal-light); font-weight: 600;
+        }
+        .field-wrap input { width: 100%; box-sizing: border-box; }
+        .field-error { font-size: 0.8rem; color: #ff6b6b; margin-top: 4px; display: none; }
+        .field-wrap.invalid input { border-color: #ff6b6b !important; }
+        .field-wrap.valid input { border-color: #4caf50 !important; }
+        .field-hint { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
+        .password-wrap { position: relative; }
+        .password-wrap input { padding-right: 40px; }
+        .toggle-pw {
+            position: absolute; right: 10px; top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer; background: none; border: none;
+            color: var(--text-muted); font-size: 1rem;
+        }
+        .strength-bar { height: 4px; border-radius: 2px; background: #333; margin-top: 6px; overflow: hidden; }
+        .strength-fill { height: 100%; width: 0%; border-radius: 2px; transition: width 0.3s, background 0.3s; }
+        .strength-label { font-size: 0.75rem; margin-top: 3px; color: var(--text-muted); }
+        .form-error {
+            background: rgba(255,107,107,0.1); border: 1px solid #ff6b6b;
+            color: #ff6b6b; padding: 10px; border-radius: 6px;
+            margin-bottom: 15px; display: none; font-size: 0.9rem;
+        }
+        .btn-loading { opacity: 0.7; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+    <nav class="nav-bar container">
+        <a href="index.html" class="nav-brand">India<span class="text-gradient">Temple</span></a>
+        <div class="nav-links" id="navLinks">
+            <a href="temples.html">Explore Temples</a>
+        </div>
+    </nav>
+
+    <div class="container auth-container">
+        <div class="glass-panel">
+            <div class="auth-tabs">
+                <div class="auth-tab active" onclick="switchAuthTab('login')">Login</div>
+                <div class="auth-tab" onclick="switchAuthTab('register')">Register</div>
+            </div>
+
+            <!-- Login Form -->
+            <div id="loginForm" class="auth-form active">
+                <div id="loginError" class="form-error"></div>
+
+                <div class="field-wrap" id="wrap-loginEmail">
+                    <label for="loginEmail">📧 Email Address</label>
+                    <input type="email" id="loginEmail" class="form-control"
+                        placeholder="you@example.com"
+                        oninput="validateField('loginEmail')"
+                        onblur="validateField('loginEmail')">
+                    <div class="field-error" id="err-loginEmail"></div>
+                </div>
+
+                <div class="field-wrap" id="wrap-loginPassword">
+                    <label for="loginPassword">🔒 Password</label>
+                    <div class="password-wrap">
+                        <input type="password" id="loginPassword" class="form-control"
+                            placeholder="Enter your password"
+                            oninput="validateField('loginPassword')"
+                            onblur="validateField('loginPassword')"
+                            onkeydown="if(event.key==='Enter') handleLogin()">
+                        <button class="toggle-pw" type="button" onclick="togglePassword('loginPassword', this)">👁</button>
+                    </div>
+                    <div class="field-error" id="err-loginPassword"></div>
+                </div>
+
+                <button class="btn btn-primary" id="loginBtn" style="width:100%; margin-top:10px;" onclick="handleLogin()">
+                    Login
+                </button>
+            </div>
+
+            <!-- Register Form -->
+            <div id="registerForm" class="auth-form">
+                <div id="registerError" class="form-error"></div>
+
+                <div class="field-wrap" id="wrap-regName">
+                    <label for="regName">👤 Full Name</label>
+                    <input type="text" id="regName" class="form-control"
+                        placeholder="Enter your full name"
+                        oninput="validateField('regName')"
+                        onblur="validateField('regName')">
+                    <div class="field-error" id="err-regName"></div>
+                    <div class="field-hint">Minimum 2 characters, letters only</div>
+                </div>
+
+                <div class="field-wrap" id="wrap-regEmail">
+                    <label for="regEmail">📧 Email Address</label>
+                    <input type="email" id="regEmail" class="form-control"
+                        placeholder="you@example.com"
+                        oninput="validateField('regEmail')"
+                        onblur="validateField('regEmail')">
+                    <div class="field-error" id="err-regEmail"></div>
+                </div>
+
+                <div class="field-wrap" id="wrap-regPassword">
+                    <label for="regPassword">🔒 Password</label>
+                    <div class="password-wrap">
+                        <input type="password" id="regPassword" class="form-control"
+                            placeholder="Create a strong password"
+                            oninput="validateField('regPassword'); updateStrength()"
+                            onblur="validateField('regPassword')">
+                        <button class="toggle-pw" type="button" onclick="togglePassword('regPassword', this)">👁</button>
+                    </div>
+                    <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+                    <div class="strength-label" id="strengthLabel"></div>
+                    <div class="field-error" id="err-regPassword"></div>
+                    <div class="field-hint">Min 6 chars, include a number and uppercase letter</div>
+                </div>
+
+                <div class="field-wrap" id="wrap-regConfirm">
+                    <label for="regConfirm">🔒 Confirm Password</label>
+                    <div class="password-wrap">
+                        <input type="password" id="regConfirm" class="form-control"
+                            placeholder="Repeat your password"
+                            oninput="validateField('regConfirm')"
+                            onblur="validateField('regConfirm')"
+                            onkeydown="if(event.key==='Enter') handleRegister()">
+                        <button class="toggle-pw" type="button" onclick="togglePassword('regConfirm', this)">👁</button>
+                    </div>
+                    <div class="field-error" id="err-regConfirm"></div>
+                </div>
+
+                <button class="btn btn-primary" id="registerBtn" style="width:100%; margin-top:10px;" onclick="handleRegister()">
+                    Create Account
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script>
+        if (localStorage.getItem('userToken')) {
+            window.location.replace('profile.html');
+        }
+
+        function switchAuthTab(tab) {
+            document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+            if (tab === 'login') {
+                document.querySelectorAll('.auth-tab')[0].classList.add('active');
+                document.getElementById('loginForm').classList.add('active');
+            } else {
+                document.querySelectorAll('.auth-tab')[1].classList.add('active');
+                document.getElementById('registerForm').classList.add('active');
+            }
+        }
+
+        const rules = {
+            loginEmail:    { type: 'email',          required: true },
+            loginPassword: { type: 'password',       required: true },
+            regName:       { type: 'name',           required: true, min: 2 },
+            regEmail:      { type: 'email',          required: true },
+            regPassword:   { type: 'strongPassword', required: true, min: 6 },
+            regConfirm:    { type: 'confirm',        required: true, matchId: 'regPassword' },
+        };
+
+        function validateField(id) {
+            const input = document.getElementById(id);
+            const wrap  = document.getElementById('wrap-' + id);
+            const errEl = document.getElementById('err-' + id);
+            if (!input || !wrap || !errEl) return true;
+
+            const val  = input.value.trim();
+            const rule = rules[id];
+            let error  = '';
+
+            if (rule.required && !val) {
+                error = 'This field is required.';
+            } else if (val) {
+                if (rule.type === 'email') {
+                    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val))
+                        error = 'Enter a valid email (e.g. you@example.com).';
+                } else if (rule.type === 'name') {
+                    if (val.length < rule.min)
+                        error = 'Name must be at least ' + rule.min + ' characters.';
+                    else if (!/^[a-zA-Z\s]+$/.test(val))
+                        error = 'Name can only contain letters and spaces.';
+                } else if (rule.type === 'strongPassword') {
+                    if (val.length < rule.min)
+                        error = 'Password must be at least ' + rule.min + ' characters.';
+                    else if (!/[A-Z]/.test(val))
+                        error = 'Must include at least one uppercase letter.';
+                    else if (!/[0-9]/.test(val))
+                        error = 'Must include at least one number.';
+                } else if (rule.type === 'password') {
+                    if (!val) error = 'Password is required.';
+                } else if (rule.type === 'confirm') {
+                    const match = document.getElementById(rule.matchId);
+                    if (match && val !== match.value)
+                        error = 'Passwords do not match.';
+                }
+            }
+
+            if (error) {
+                wrap.classList.add('invalid');
+                wrap.classList.remove('valid');
+                errEl.innerText = error;
+                errEl.style.display = 'block';
+                return false;
+            } else if (val) {
+                wrap.classList.add('valid');
+                wrap.classList.remove('invalid');
+                errEl.style.display = 'none';
+                return true;
+            }
+            return true;
+        }
+
+        function updateStrength() {
+            const val  = document.getElementById('regPassword').value;
+            const fill = document.getElementById('strengthFill');
+            const lbl  = document.getElementById('strengthLabel');
+            let score  = 0;
+            if (val.length >= 6)  score++;
+            if (val.length >= 10) score++;
+            if (/[A-Z]/.test(val)) score++;
+            if (/[0-9]/.test(val)) score++;
+            if (/[^A-Za-z0-9]/.test(val)) score++;
+            const levels = [
+                { label: '',           color: '#333',    pct: '0%'    },
+                { label: 'Weak',       color: '#ff4444', pct: '25%'   },
+                { label: 'Fair',       color: '#ff9800', pct: '50%'   },
+                { label: 'Good',       color: '#2196f3', pct: '75%'   },
+                { label: 'Strong',     color: '#4caf50', pct: '90%'   },
+                { label: 'Very Strong',color: '#00e676', pct: '100%'  },
+            ];
+            const l = levels[score] || levels[0];
+            fill.style.width      = l.pct;
+            fill.style.background = l.color;
+            lbl.innerText         = l.label ? 'Strength: ' + l.label : '';
+            lbl.style.color       = l.color;
+        }
+
+        function togglePassword(id, btn) {
+            const input = document.getElementById(id);
+            if (input.type === 'password') { input.type = 'text';     btn.innerText = '🙈'; }
+            else                           { input.type = 'password'; btn.innerText = '👁'; }
+        }
+
+        async function handleLogin() {
+            const errDiv = document.getElementById('loginError');
+            errDiv.style.display = 'none';
+            const emailOk = validateField('loginEmail');
+            const passOk  = validateField('loginPassword');
+            if (!emailOk || !passOk) return;
+
+            const email    = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const btn      = document.getElementById('loginBtn');
+            btn.innerText = 'Logging in...';
+            btn.disabled  = true;
+
+            try {
+                const res  = await fetch('http://localhost:5000/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+                if (res.ok && data.token) {
+                    localStorage.setItem('userToken', data.token);
+                    window.location.href = 'profile.html';
+                } else {
+                    errDiv.innerText     = data.message || 'Invalid email or password.';
+                    errDiv.style.display = 'block';
+                    btn.innerText = 'Login';
+                    btn.disabled  = false;
+                }
+            } catch (err) {
+                errDiv.innerText     = 'Cannot connect to server. Make sure it is running.';
+                errDiv.style.display = 'block';
+                btn.innerText = 'Login';
+                btn.disabled  = false;
+            }
+        }
+
+        async function handleRegister() {
+            const errDiv = document.getElementById('registerError');
+            errDiv.style.display = 'none';
+            const valid = ['regName','regEmail','regPassword','regConfirm']
+                .map(validateField).every(Boolean);
+            if (!valid) return;
+
+            const name     = document.getElementById('regName').value.trim();
+            const email    = document.getElementById('regEmail').value.trim();
+            const password = document.getElementById('regPassword').value;
+            const btn      = document.getElementById('registerBtn');
+            btn.innerText = 'Creating account...';
+            btn.disabled  = true;
+
+            try {
+                const res  = await fetch('http://localhost:5000/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password, role: 'user' })
+                });
+                const data = await res.json();
+                if (res.ok && data.token) {
+                    localStorage.setItem('userToken', data.token);
+                    window.location.href = 'profile.html';
+                } else {
+                    errDiv.innerText     = data.message || 'Registration failed.';
+                    errDiv.style.display = 'block';
+                    btn.innerText = 'Create Account';
+                    btn.disabled  = false;
+                }
+            } catch (err) {
+                errDiv.innerText     = 'Cannot connect to server. Make sure it is running.';
+                errDiv.style.display = 'block';
+                btn.innerText = 'Create Account';
+                btn.disabled  = false;
+            }
+        }
+    </script>
+</body>
+</html>

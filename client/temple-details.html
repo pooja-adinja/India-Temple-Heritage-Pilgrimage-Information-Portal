@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Temple Details | India Temple Heritage Portal</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .detail-hero {
+            padding: 4rem 0;
+            text-align: center;
+            background: rgba(0,0,0,0.2);
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .section-title {
+            color: var(--teal-light);
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            margin-top: 30px;
+        }
+        .ritual-item {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--gold-main);
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav-bar container">
+        <a href="index.html" class="nav-brand">India<span class="text-gradient">Temple</span></a>
+        <div class="nav-links" id="navLinks">
+            <a href="temples.html">Explore Temples</a>
+            <a href="admin.html">Admin</a>
+        </div>
+    </nav>
+    <div class="detail-hero">
+        <div class="container">
+            <h1 id="tName" style="font-size: 3rem;">Loading...</h1>
+            <p id="tLocation" style="font-size: 1.2rem; color: var(--gold-light);"></p>
+            <p style="margin-top: 10px; font-size: 0.9rem;"><span style="color: var(--teal-light);">Verified Source: </span> <strong id="tSource" style="color: white;">...</strong></p>
+            <div style="margin-top: 20px; display: flex; gap: 15px; justify-content: center;">
+                <button id="saveBtn" class="btn btn-outline" style="width: auto; min-width: 150px;" onclick="handleSaveClick()">♡ Save Temple</button>
+                <button class="btn btn-outline" style="width: auto; min-width: 150px;" onclick="handleShareClick()">📤 Share</button>
+            </div>
+            
+            <div id="ratingWidget" style="margin-top: 15px; display: none; justify-content: center; align-items: center;">
+                <span style="color: var(--gold-main); margin-right: 10px;">Rate this temple: </span>
+                <select id="templeRating" style="padding: 5px; border-radius: 4px; background: rgba(0,0,0,0.5); color: white; border: 1px solid var(--glass-border); margin-right: 10px;">
+                    <option value="5">5 - Excellent</option>
+                    <option value="4">4 - Good</option>
+                    <option value="3">3 - Average</option>
+                    <option value="2">2 - Poor</option>
+                    <option value="1">1 - Terrible</option>
+                </select>
+                <button class="btn btn-outline" style="padding: 5px 10px;" onclick="submitRating()">Submit</button>
+                <span id="ratingMsg" style="margin-left: 10px; font-size: 0.9rem; color: var(--teal-light);"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mt-4 mb-4">
+        <div class="grid-2">
+            <!-- Left Column: Info & History -->
+            <div class="glass-panel">
+                <h3 class="section-title">History & Significance</h3>
+                <p id="tHistory" style="white-space: pre-line;"></p>
+                
+                <h3 class="section-title">Deities</h3>
+                <p id="tDeities"></p>
+                
+                <h3 class="section-title">Festivals</h3>
+                <ul id="tFestivals" style="padding-left: 20px; color: var(--text-muted);"></ul>
+            </div>
+
+            <!-- Right Column: Pilgrimage Info -->
+            <div class="glass-panel">
+                <h3 class="section-title">Pilgrimage Information</h3>
+                
+                <div style="margin-bottom: 20px;">
+                    <h4 style="color: var(--gold-main);">Darshan Timings</h4>
+                    <p id="tTimings"></p>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <h4 style="color: var(--gold-main);">Dress Code</h4>
+                    <p id="tDressCode"></p>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <h4 style="color: var(--gold-main);">Visitor Guidelines</h4>
+                    <p id="tGuidelines"></p>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <h4 style="color: var(--gold-main);">Nearby Facilities</h4>
+                    <p id="tFacilities"></p>
+                </div>
+
+                <h3 class="section-title">Daily Rituals & Pooja</h3>
+                <div id="tRituals"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script>
+        let currentTempleId = null;
+        let currentTempleName = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('id');
+            if(id) {
+                currentTempleId = id;
+                fetchTempleDetails(id).then(() => {
+                    currentTempleName = document.getElementById('tName').innerText;
+                });
+                checkSavedStatus(id);
+            } else {
+                document.getElementById('tName').innerText = "Temple Not Found";
+            }
+        });
+
+        function handleSaveClick() {
+            if (currentTempleId) toggleSaveTemple(currentTempleId);
+        }
+
+        function handleShareClick() {
+            if (currentTempleName) shareTemple(currentTempleName);
+        }
+    </script>
+</body>
+</html>

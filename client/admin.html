@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | India Temple Heritage</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .admin-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid var(--glass-border);
+            margin-bottom: 30px;
+        }
+        .tab-nav {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 25px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .tab-btn {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.95rem;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .tab-btn:hover { color: var(--text-light); }
+        .tab-btn.active { color: var(--gold-main); border-bottom-color: var(--gold-main); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .temple-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .status-badge {
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .status-approved { background: rgba(76,175,80,0.15); color: #4caf50; border: 1px solid #4caf50; }
+        .status-pending  { background: rgba(255,152,0,0.15);  color: #ff9800; border: 1px solid #ff9800; }
+        .status-rejected { background: rgba(255,107,107,0.15);color: #ff6b6b; border: 1px solid #ff6b6b; }
+        .action-btn {
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            border: none;
+            margin-left: 6px;
+        }
+        .btn-approve { background: rgba(76,175,80,0.2);  color: #4caf50; border: 1px solid #4caf50; }
+        .btn-reject  { background: rgba(255,107,107,0.2);color: #ff6b6b; border: 1px solid #ff6b6b; }
+        .btn-delete  { background: rgba(255,107,107,0.2);color: #ff6b6b; border: 1px solid #ff6b6b; }
+        .kpi-card {
+            text-align: center;
+            padding: 25px;
+        }
+        .kpi-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--gold-main);
+        }
+        .kpi-label { color: var(--text-muted); margin-top: 5px; }
+        .temple-chip {
+            padding: 8px 12px;
+            border: 1px solid var(--glass-border);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .temple-chip:hover { border-color: var(--gold-main); }
+        .temple-chip.selected {
+            border-color: var(--gold-main);
+            background: rgba(212,175,55,0.15);
+            color: var(--gold-main);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="admin-nav">
+            <a href="index.html" class="nav-brand">India<span class="text-gradient">Temple</span> <span style="color:var(--text-muted)">Admin</span></a>
+            <div>
+                <a href="index.html" class="btn btn-outline" style="margin-right:10px;">View Site</a>
+                <button class="btn btn-outline" onclick="adminLogout()">Logout</button>
+            </div>
+        </div>
+
+        <!-- Login Section -->
+        <div id="loginSection">
+            <div style="max-width:400px; margin:60px auto;">
+                <div class="glass-panel">
+                    <h2 style="text-align:center; color:var(--gold-main); margin-bottom:25px;">Admin Login</h2>
+                    <div id="loginError" style="color:red; margin-bottom:10px; display:none;"></div>
+                    <label>Email</label>
+                    <input type="email" id="email" class="form-control" placeholder="admin@example.com">
+                    <label style="margin-top:12px;">Password</label>
+                    <input type="password" id="password" class="form-control" placeholder="Password"
+                        onkeydown="if(event.key==='Enter') login()">
+                    <button class="btn btn-primary" style="width:100%; margin-top:15px;" onclick="login()">Login</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Section -->
+        <div id="dashboardSection" style="display:none;">
+            <div class="tab-nav">
+                <button class="tab-btn active" onclick="switchTab('temples', this)">Manage Temples</button>
+                <button class="tab-btn" onclick="switchTab('add', this)">Add Temple</button>
+                <button class="tab-btn" onclick="switchTab('circuits', this)">Manage Circuits</button>
+                <button class="tab-btn" onclick="switchTab('analytics', this)">Analytics / KPIs</button>
+            </div>
+
+            <!-- Manage Temples Tab -->
+            <div id="templesTab" class="tab-content active glass-panel">
+                <h3 style="margin-bottom:20px;">All Temples</h3>
+                <div id="adminTemplesList"><p style="color:var(--text-muted);">Loading...</p></div>
+            </div>
+
+            <!-- Add Temple Tab -->
+            <div id="addTab" class="tab-content glass-panel">
+                <h3 style="margin-bottom:20px;">Add New Temple</h3>
+                <form id="addTempleForm" onsubmit="addTemple(event)">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+                        <div>
+                            <label>Temple Name *</label>
+                            <input type="text" id="tName" class="form-control" required>
+                        </div>
+                        <div>
+                            <label>City *</label>
+                            <input type="text" id="tCity" class="form-control" required>
+                        </div>
+                        <div>
+                            <label>State *</label>
+                            <input type="text" id="tState" class="form-control" required>
+                        </div>
+                        <div>
+                            <label>Deity</label>
+                            <input type="text" id="tDeity" class="form-control" placeholder="e.g. Lord Shiva, Goddess Durga">
+                        </div>
+                        <div>
+                            <label>Darshan Timings</label>
+                            <input type="text" id="tTimings" class="form-control" placeholder="e.g. 6:00 AM - 9:00 PM">
+                        </div>
+                        <div>
+                            <label>Dress Code</label>
+                            <input type="text" id="tDressCode" class="form-control" placeholder="e.g. Traditional attire required">
+                        </div>
+                    </div>
+                    <div style="margin-top:15px;">
+                        <label>History / Description *</label>
+                        <textarea id="tHistory" class="form-control" rows="4" required placeholder="Describe the temple's history and significance..."></textarea>
+                    </div>
+                    <div style="margin-top:15px;">
+                        <label>Visitor Guidelines</label>
+                        <textarea id="tGuidelines" class="form-control" rows="2" placeholder="Rules and guidelines for visitors..."></textarea>
+                    </div>
+                    <div style="margin-top:15px;">
+                        <label>Nearby Facilities</label>
+                        <textarea id="tFacilities" class="form-control" rows="2" placeholder="Hotels, restaurants, transport nearby..."></textarea>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-top:15px;">
+                        <div>
+                            <label>Latitude</label>
+                            <input type="number" id="addLat" class="form-control" step="any" placeholder="e.g. 27.1751">
+                        </div>
+                        <div>
+                            <label>Longitude</label>
+                            <input type="number" id="addLng" class="form-control" step="any" placeholder="e.g. 78.0421">
+                        </div>
+                    </div>
+                    <div style="margin-top:15px;">
+                        <label>
+                            <input type="checkbox" id="tFeatured"> Mark as Featured Temple
+                        </label>
+                    </div>
+                    <div id="addTempleMsg" style="margin-top:10px; display:none;"></div>
+                    <button type="submit" class="btn btn-primary mt-4">Add Temple</button>
+                </form>
+            </div>
+
+            <!-- Circuits Tab -->
+            <div id="circuitsTab" class="tab-content glass-panel">
+                <h3>Add New Circuit</h3>
+                <form id="addCircuitForm" onsubmit="addCircuit(event)" class="mt-4">
+                    <label>Circuit Name</label>
+                    <input type="text" id="cName" class="form-control" placeholder="e.g. Char Dham Circuit" required>
+
+                    <label style="margin-top:12px;">Description</label>
+                    <textarea id="cDesc" class="form-control" rows="3" placeholder="Describe this pilgrimage circuit..." required></textarea>
+
+                    <label style="margin-top:12px;">Region</label>
+                    <input type="text" id="cRegion" class="form-control" placeholder="e.g. North India">
+
+                    <label style="margin-top:15px; display:block;">Select Temples to Include</label>
+                    <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:8px;">
+                        Click temples to select/deselect. Selected ones turn gold.
+                    </div>
+                    <div id="templeSelector" style="
+                        max-height: 280px;
+                        overflow-y: auto;
+                        border: 1px solid var(--glass-border);
+                        border-radius: 8px;
+                        padding: 10px;
+                        display: grid;
+                        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                        gap: 8px;
+                    ">
+                        <p style="color:var(--text-muted);">Loading temples...</p>
+                    </div>
+                    <div id="selectedCount" style="margin-top:8px; font-size:0.85rem; color:var(--teal-light);">
+                        0 temples selected
+                    </div>
+
+                    <button type="submit" class="btn btn-primary mt-4">Create Circuit</button>
+                </form>
+
+                <hr style="margin: 30px 0; border-color: var(--glass-border);">
+                <h3>Existing Circuits</h3>
+                <div id="circuitsList" style="margin-top:15px;">
+                    <p style="color:var(--text-muted);">Loading circuits...</p>
+                </div>
+            </div>
+
+            <!-- Analytics Tab -->
+            <div id="analyticsTab" class="tab-content glass-panel">
+                <h3 style="margin-bottom:20px; color:var(--gold-main);">Key Performance Indicators</h3>
+                <div class="grid-3" id="kpiGrid" style="gap:20px;">
+                    <p>Loading KPIs...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/admin.js"></script>
+</body>
+</html>

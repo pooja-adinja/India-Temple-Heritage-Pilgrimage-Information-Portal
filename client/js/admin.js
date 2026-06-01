@@ -393,6 +393,10 @@ async function fetchKPIs() {
                 <div class="kpi-number">${data.totalSaves      || 0}</div>
                 <div class="kpi-label">Total Temple Saves</div>
             </div>
+            <div class="glass-panel kpi-card">
+                <div class="kpi-number">${data.avgRating || 'N/A'}</div>
+                <div class="kpi-label">Avg Temple Rating</div>
+            </div>
         `;
     } catch (err) {
         grid.innerHTML = '<p style="color:var(--text-muted);">Could not load analytics.</p>';

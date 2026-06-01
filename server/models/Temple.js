@@ -1,3 +1,4 @@
+console.log("Temple model loaded");
 const mongoose = require('mongoose');
 
 const ritualSchema = new mongoose.Schema({
@@ -32,22 +33,22 @@ const templeSchema = new mongoose.Schema({
     ratings: [{ value: { type: Number, min: 1, max: 5 }, createdAt: { type: Date, default: Date.now } }],
     averageRating: { type: Number, default: 0 },
     // GeoJSON location for geospatial queries
-    location: {
-        type: {
-            type: String,
-            enum: ['Point'],
-            default: 'Point'
-        },
-        coordinates: {
-            type: [Number], // [longitude, latitude]
-            default: undefined
-        }
-    },
+    //location: {
+        //type: {
+            //type: String,
+            //enum: ['Point'],
+            //default: 'Point'
+        //},
+        //coordinates: {
+            //type: [Number], // [longitude, latitude]
+            //default: undefined
+        //}
+    //},
     createdAt: { type: Date, default: Date.now }
 });
 
 // 2dsphere index for location-based queries
-templeSchema.index({ location: '2dsphere' });
+//templeSchema.index({ location: '2dsphere' });
 
 // Text index for full-text search across name, city, state, history, deities
 templeSchema.index({

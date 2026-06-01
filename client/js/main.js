@@ -26,16 +26,71 @@ async function fetchCircuits() {
             grid.innerHTML = '<p class="text-center" style="grid-column: 1/-1;">No circuits found.</p>';
             return;
         }
-        grid.innerHTML = circuits.map(c => `
-            <div class="glass-panel">
-                <h3 style="color: var(--gold-main);">${c.name}</h3>
-                <p style="color: var(--teal-light); margin-bottom: 10px;">${c.region || ''}</p>
-                <p style="color: var(--text-muted);">${c.description}</p>
-                <p style="margin-top: 15px; font-size: 0.9rem;">Includes ${c.temples.length} temples</p>
-            </div>
-        `).join('');
+        grid.innerHTML = circuits.map(c =>
+            '<div class="glass-panel" onclick="openCircuitModal(\'' + c._id + '\')" style="cursor:pointer; transition:transform 0.2s, box-shadow 0.2s;" ' +
+            'onmouseover="this.style.transform=\'translateY(-4px)\'; this.style.boxShadow=\'0 8px 30px rgba(212,175,55,0.2)\'" ' +
+            'onmouseout="this.style.transform=\'\'; this.style.boxShadow=\'\'">' +
+            '<h3 style="color:var(--gold-main);">' + c.name + '</h3>' +
+            '<p style="color:var(--teal-light); margin-bottom:10px;">' + (c.region || '') + '</p>' +
+            '<p style="color:var(--text-muted); margin-bottom:15px;">' + c.description + '</p>' +
+            '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+            '<span style="font-size:0.9rem; color:var(--text-muted);">🛕 ' + c.temples.length + ' temple' + (c.temples.length !== 1 ? 's' : '') + '</span>' +
+            '<span style="color:var(--gold-main); font-size:0.85rem; font-weight:600;">View Temples →</span>' +
+            '</div></div>'
+        ).join('');
     } catch (error) {
         console.error("Error fetching circuits:", error);
+    }
+}
+
+async function openCircuitModal(circuitId) {
+    const modal = document.getElementById('circuitModal');
+    if (!modal) return;
+
+    document.getElementById('modalTemplesList').innerHTML = '<p style="color:var(--text-muted);">Loading temples...</p>';
+    document.getElementById('modalCircuitName').innerText  = '';
+    document.getElementById('modalCircuitRegion').innerText = '';
+    document.getElementById('modalCircuitDesc').innerText  = '';
+    modal.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+
+    try {
+        const res      = await fetch(`${API_URL}/circuits`);
+        const circuits = await res.json();
+        const circuit  = circuits.find(c => c._id === circuitId);
+        if (!circuit) return;
+
+        document.getElementById('modalCircuitName').innerText   = circuit.name;
+        document.getElementById('modalCircuitRegion').innerText = circuit.region || '';
+        document.getElementById('modalCircuitDesc').innerText   = circuit.description;
+
+        const list = document.getElementById('modalTemplesList');
+
+        if (!circuit.temples || circuit.temples.length === 0) {
+            list.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; color:var(--text-muted);"><div style="font-size:2.5rem; margin-bottom:10px;">🛕</div><p>No temples linked to this circuit yet.</p><p style="font-size:0.85rem; margin-top:8px;">Admin can add temples via the Manage Circuits panel.</p></div>';
+            return;
+        }
+
+        list.innerHTML = circuit.temples.map(t =>
+            '<div style="border:1px solid var(--glass-border); border-radius:10px; padding:15px; background:rgba(255,255,255,0.03);">' +
+            '<h4 style="color:var(--gold-main); margin-bottom:5px; font-size:1rem;">' + t.name + '</h4>' +
+            '<p style="color:var(--teal-light); font-size:0.85rem; margin-bottom:8px;">📍 ' + t.city + ', ' + t.state + '</p>' +
+            (t.deities && t.deities.length ? '<p style="color:var(--text-muted); font-size:0.8rem; margin-bottom:8px;">🙏 ' + t.deities.join(', ') + '</p>' : '') +
+            (t.darshanTimings ? '<p style="color:var(--text-muted); font-size:0.8rem; margin-bottom:10px;">⏰ ' + t.darshanTimings + '</p>' : '') +
+            '<a href="temple-details.html?id=' + t._id + '" style="display:block; text-align:center; padding:7px; border:1px solid var(--gold-main); color:var(--gold-main); border-radius:6px; font-size:0.85rem; text-decoration:none;">View Details</a>' +
+            '</div>'
+        ).join('');
+
+    } catch (err) {
+        document.getElementById('modalTemplesList').innerHTML = '<p style="color:red;">Error loading temples.</p>';
+    }
+}
+
+function closeCircuitModal(event) {
+    const modal = document.getElementById('circuitModal');
+    if (event.target === modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
     }
 }
 
@@ -121,7 +176,6 @@ async function handleLogin() {
         const data = await res.json();
         if (res.ok && data.token) {
             localStorage.setItem('userToken', data.token);
-            // Verify it was saved before redirecting
             const saved = localStorage.getItem('userToken');
             if (saved) {
                 window.location.href = 'profile.html';
@@ -227,7 +281,7 @@ async function toggleSaveTemple(templeId) {
     }
 
     const btn = document.getElementById('saveBtn');
-    if (btn) btn.disabled = true; // prevent double clicks
+    if (btn) btn.disabled = true;
 
     try {
         const res = await fetch(`${API_URL}/users/save-temple/${templeId}`, {
@@ -296,7 +350,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('userToken');
 
     if (navLinks) {
-        // Remove stale auth links to prevent duplicates on re-render
         navLinks.querySelectorAll('[data-auth]').forEach(el => el.remove());
 
         if (token) {

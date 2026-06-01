@@ -29,22 +29,68 @@
     <section class="container mt-4 mb-4">
         <h2 class="text-center mb-4">Featured Temples</h2>
         <div class="grid-3" id="featuredGrid">
-            <!-- Featured Temples will be injected here via JS -->
             <div class="text-center" style="width: 100%; grid-column: 1 / -1; color: var(--text-muted);">Loading featured temples...</div>
         </div>
     </section>
 
-    
     <section class="container mt-4 mb-4">
         <h2 class="text-center mb-4">Popular Pilgrimage Circuits</h2>
-        <div class="grid-2" id="circuitsGrid">
-            <!-- Circuits injected here -->
-        </div>
+        <div class="grid-2" id="circuitsGrid"></div>
     </section>
+
+    <!-- Circuit Details Modal -->
+    <div id="circuitModal" style="
+        display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+        background:rgba(0,0,0,0.7); z-index:1000; overflow-y:auto;
+        backdrop-filter:blur(4px);"
+        onclick="closeCircuitModal(event)">
+        <div style="max-width:800px; margin:40px auto; padding:20px;">
+            <div class="glass-panel" style="position:relative; padding:30px;">
+                <button onclick="document.getElementById('circuitModal').style.display='none'; document.body.style.overflow='';"
+                    style="position:absolute; top:15px; right:15px; background:rgba(255,107,107,0.2);
+                    border:1px solid #ff6b6b; color:#ff6b6b; border-radius:6px;
+                    padding:5px 12px; cursor:pointer; font-size:1rem;">✕ Close</button>
+
+                <h2 id="modalCircuitName" style="color:var(--gold-main); margin-bottom:5px;"></h2>
+                <p id="modalCircuitRegion" style="color:var(--teal-light); margin-bottom:10px;"></p>
+                <p id="modalCircuitDesc" style="color:var(--text-muted); margin-bottom:20px;"></p>
+
+                <hr style="border:0; border-top:1px solid var(--glass-border); margin-bottom:20px;">
+
+                <h3 style="color:var(--gold-main); margin-bottom:15px;">🛕 Temples in this Circuit</h3>
+                <div id="modalTemplesList" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:15px;">
+                    <p style="color:var(--text-muted);">Loading...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Circuit Details Modal -->
+<div id="circuitModal" style="
+    display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+    background:rgba(0,0,0,0.7); z-index:1000; overflow-y:auto;
+    backdrop-filter:blur(4px);"
+    onclick="closeCircuitModal(event)">
+    <div style="max-width:800px; margin:40px auto; padding:20px;">
+        <div class="glass-panel" style="position:relative; padding:30px;">
+            <button onclick="document.getElementById('circuitModal').style.display='none'; document.body.style.overflow='';"
+                style="position:absolute; top:15px; right:15px; background:rgba(255,107,107,0.2);
+                border:1px solid #ff6b6b; color:#ff6b6b; border-radius:6px;
+                padding:5px 12px; cursor:pointer; font-size:1rem;">✕ Close</button>
+            <h2 id="modalCircuitName" style="color:var(--gold-main); margin-bottom:5px;"></h2>
+            <p id="modalCircuitRegion" style="color:var(--teal-light); margin-bottom:10px;"></p>
+            <p id="modalCircuitDesc" style="color:var(--text-muted); margin-bottom:20px;"></p>
+            <hr style="border:0; border-top:1px solid var(--glass-border); margin-bottom:20px;">
+            <h3 style="color:var(--gold-main); margin-bottom:15px;">🛕 Temples in this Circuit</h3>
+            <div id="modalTemplesList" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:15px;">
+                <p style="color:var(--text-muted);">Loading...</p>
+            </div>
+        </div>
+    </div>
+</div>
 
     <script src="js/main.js"></script>
     <script>
-        // Specific logic for index.html to fetch featured
         document.addEventListener('DOMContentLoaded', () => {
             fetchFeaturedTemples();
             fetchCircuits();
@@ -52,8 +98,12 @@
 
         function searchTemples() {
             const query = document.getElementById('searchInput').value;
-            window.location.href = `temples.html?search=${encodeURIComponent(query)}`;
+            window.location.href = 'temples.html?search=' + encodeURIComponent(query);
         }
+
+        document.getElementById('searchInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') searchTemples();
+        });
     </script>
 </body>
 </html>

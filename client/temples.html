@@ -46,21 +46,7 @@
         }
         .near-me-btn:hover { background: rgba(100,200,180,0.2); }
         .near-me-btn.active { background: var(--teal-light); color: #0a1628; }
-        .location-status {
-            font-size: 0.8rem;
-            margin-top: 8px;
-            min-height: 18px;
-        }
-        .distance-badge {
-            display: inline-block;
-            background: rgba(100,200,180,0.15);
-            color: var(--teal-light);
-            border: 1px solid var(--teal-light);
-            border-radius: 20px;
-            padding: 2px 10px;
-            font-size: 0.75rem;
-            margin-bottom: 8px;
-        }
+        .location-status { font-size: 0.8rem; margin-top: 8px; min-height: 18px; }
         .state-select {
             width: 100%;
             background: var(--bg-card);
@@ -79,19 +65,6 @@
             margin-bottom: 8px;
             margin-top: 15px;
         }
-        .temple-card {
-            display: flex;
-            flex-direction: column;
-        }
-        .temple-card-header { margin-bottom: 8px; }
-        .temple-card-body { flex: 1; }
-        .no-results {
-            grid-column: 1 / -1;
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--text-muted);
-        }
-        .no-results .icon { font-size: 3rem; margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -155,9 +128,6 @@
             <div>
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
                     <p id="resultsCount" style="color:var(--text-muted); margin:0;">Loading...</p>
-                    <div id="locationBadge" style="display:none;">
-                        <span class="distance-badge">📍 Sorted by distance</span>
-                    </div>
                 </div>
                 <div class="grid-2" id="templesGrid"></div>
             </div>
@@ -173,12 +143,8 @@
         document.addEventListener('DOMContentLoaded', async () => {
             await loadStates();
             const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.has('search')) {
-                document.getElementById('filterSearch').value = urlParams.get('search');
-            }
-            if (urlParams.has('state')) {
-                document.getElementById('filterState').value = urlParams.get('state');
-            }
+            if (urlParams.has('search')) document.getElementById('filterSearch').value = urlParams.get('search');
+            if (urlParams.has('state'))  document.getElementById('filterState').value  = urlParams.get('state');
             applyFilters();
         });
 
@@ -193,24 +159,19 @@
                     opt.innerText = s;
                     select.appendChild(opt);
                 });
-            } catch (err) {
-                console.error('Could not load states:', err);
-            }
+            } catch (err) { console.error('Could not load states:', err); }
         }
 
         function findNearMe() {
             const btn = document.getElementById('nearMeBtn');
             const msg = document.getElementById('locationMsg');
-
             if (!navigator.geolocation) {
                 msg.innerText   = '❌ Geolocation not supported.';
                 msg.style.color = 'red';
                 return;
             }
-
             btn.innerText = '⏳ Getting location...';
             btn.disabled  = true;
-
             navigator.geolocation.getCurrentPosition(
                 (position) => {
                     currentLat = position.coords.latitude;
@@ -218,20 +179,15 @@
                     btn.innerText = '✅ Location Found';
                     btn.classList.add('active');
                     btn.disabled  = false;
-                    msg.innerText = `📍 ${currentLat.toFixed(4)}, ${currentLng.toFixed(4)}`;
+                    msg.innerText = '📍 ' + currentLat.toFixed(4) + ', ' + currentLng.toFixed(4);
                     msg.style.color = 'var(--teal-light)';
-                    document.getElementById('locationBadge').style.display = 'block';
                     applyFilters();
                 },
                 (error) => {
                     btn.innerText = '📍 Find Temples Near Me';
                     btn.disabled  = false;
                     btn.classList.remove('active');
-                    const msgs = {
-                        1: '❌ Permission denied. Please allow location.',
-                        2: '❌ Location unavailable.',
-                        3: '❌ Timed out. Try again.'
-                    };
+                    const msgs = { 1: '❌ Permission denied.', 2: '❌ Location unavailable.', 3: '❌ Timed out.' };
                     msg.innerText   = msgs[error.code] || '❌ Location error.';
                     msg.style.color = 'red';
                 }
@@ -239,61 +195,52 @@
         }
 
         async function applyFilters() {
-            const search = document.getElementById('filterSearch').value.trim();
-            const state  = document.getElementById('filterState').value;
-            const deity  = document.getElementById('filterDeity').value.trim();
-            const radius = document.getElementById('filterRadius').value || 50;
-            const grid   = document.getElementById('templesGrid');
+            const search  = document.getElementById('filterSearch').value.trim();
+            const state   = document.getElementById('filterState').value.trim();
+            const deity   = document.getElementById('filterDeity').value.trim();
+            const radius  = document.getElementById('filterRadius').value || 50;
+            const grid    = document.getElementById('templesGrid');
             const countEl = document.getElementById('resultsCount');
 
-            grid.innerHTML = '<p style="color:var(--text-muted); grid-column:1/-1;">Loading temples...</p>';
+            grid.innerHTML = '<p style="color:var(--text-muted);">Loading temples...</p>';
 
-            let url = `${API}/temples?`;
-            if (search)  url += `search=${encodeURIComponent(search)}&`;
-            if (state)   url += `state=${encodeURIComponent(state)}&`;
-            if (deity)   url += `deity=${encodeURIComponent(deity)}&`;
+            let url = API + '/temples?';
+            if (search) url += 'search=' + encodeURIComponent(search) + '&';
+            if (state)  url += 'state='  + encodeURIComponent(state)  + '&';
+            if (deity)  url += 'deity='  + encodeURIComponent(deity)  + '&';
             if (currentLat && currentLng) {
-                url += `lat=${currentLat}&lng=${currentLng}&radius=${radius}&`;
+                url += 'lat=' + currentLat + '&lng=' + currentLng + '&radius=' + radius + '&';
             }
 
             try {
                 const res     = await fetch(url);
                 const temples = await res.json();
 
-                countEl.innerText = `Showing ${temples.length} temple${temples.length !== 1 ? 's' : ''}`;
+                countEl.innerText = 'Showing ' + temples.length + ' temple' + (temples.length !== 1 ? 's' : '');
 
                 if (!temples.length) {
-                    grid.innerHTML = `
-                        <div class="no-results">
-                            <div class="icon">🛕</div>
-                            <p>No temples found matching your criteria.</p>
-                            <button class="btn btn-outline" style="margin-top:15px;" onclick="clearFilters()">Clear Filters</button>
-                        </div>`;
+                    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:60px 20px; color:var(--text-muted);"><div style="font-size:3rem; margin-bottom:10px;">🛕</div><p>No temples found matching your criteria.</p><button class="btn btn-outline" style="margin-top:15px;" onclick="clearFilters()">Clear Filters</button></div>';
                     return;
                 }
 
-                grid.innerHTML = temples.map(t => `
-                    <div class="glass-panel temple-card">
-                        <div class="temple-card-header">
-                            ${t.distance !== undefined ? `<span class="distance-badge">📍 ${t.distance} km away</span>` : ''}
-                            ${t.isFeatured ? `<span style="background:rgba(212,175,55,0.15); color:var(--gold-main); border:1px solid var(--gold-main); border-radius:20px; padding:2px 10px; font-size:0.75rem; margin-left:4px;">⭐ Featured</span>` : ''}
-                        </div>
-                        <div class="temple-card-body">
-                            <h3 style="font-size:1.4rem; margin-bottom:5px;">${t.name}</h3>
-                            <p style="color:var(--gold-main); font-weight:600; margin-bottom:8px;">📍 ${t.city}, ${t.state}</p>
-                            ${t.deities && t.deities.length ? `<p style="color:var(--teal-light); font-size:0.85rem; margin-bottom:8px;">🙏 ${t.deities.join(', ')}</p>` : ''}
-                            <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:15px;">
-                                ${t.history ? t.history.substring(0, 120) + '...' : ''}
-                            </p>
-                            ${t.averageRating ? `<p style="font-size:0.85rem; color:var(--gold-main); margin-bottom:10px;">⭐ ${t.averageRating}/5</p>` : ''}
-                        </div>
-                        <a href="temple-details.html?id=${t._id}" class="btn btn-outline" style="text-align:center;">View Details</a>
-                    </div>
-                `).join('');
+                grid.innerHTML = temples.map(function(t) {
+                    return '<div class="glass-panel" style="display:flex; flex-direction:column;">' +
+                        '<div style="margin-bottom:8px;">' +
+                        (t.distance !== undefined ? '<span style="background:rgba(100,200,180,0.15); color:var(--teal-light); border:1px solid var(--teal-light); border-radius:20px; padding:2px 10px; font-size:0.75rem;">📍 ' + t.distance + ' km away</span>' : '') +
+                        (t.isFeatured ? '<span style="background:rgba(212,175,55,0.15); color:var(--gold-main); border:1px solid var(--gold-main); border-radius:20px; padding:2px 10px; font-size:0.75rem; margin-left:4px;">⭐ Featured</span>' : '') +
+                        '</div>' +
+                        '<h3 style="font-size:1.4rem; margin-bottom:5px;">' + t.name + '</h3>' +
+                        '<p style="color:var(--gold-main); font-weight:600; margin-bottom:8px;">📍 ' + t.city + ', ' + t.state + '</p>' +
+                        (t.deities && t.deities.length ? '<p style="color:var(--teal-light); font-size:0.85rem; margin-bottom:8px;">🙏 ' + t.deities.join(', ') + '</p>' : '') +
+                        '<p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:15px; flex:1;">' + (t.history ? t.history.substring(0, 120) + '...' : '') + '</p>' +
+                        (t.averageRating ? '<p style="font-size:0.85rem; color:var(--gold-main); margin-bottom:10px;">⭐ ' + t.averageRating + '/5</p>' : '') +
+                        '<a href="temple-details.html?id=' + t._id + '" class="btn btn-outline" style="text-align:center;">View Details</a>' +
+                        '</div>';
+                }).join('');
 
             } catch (err) {
                 console.error(err);
-                grid.innerHTML = '<p style="color:red; grid-column:1/-1;">Error loading temples. Is the server running?</p>';
+                grid.innerHTML = '<p style="color:red;">Error loading temples. Is the server running?</p>';
                 countEl.innerText = 'Error';
             }
         }
@@ -305,7 +252,6 @@
             document.getElementById('filterRadius').value  = '50';
             document.getElementById('radiusVal').innerText = '50 km';
             document.getElementById('locationMsg').innerText = '';
-            document.getElementById('locationBadge').style.display = 'none';
             document.getElementById('nearMeBtn').classList.remove('active');
             document.getElementById('nearMeBtn').innerText = '📍 Find Temples Near Me';
             currentLat = null;

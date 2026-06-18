@@ -129,7 +129,7 @@
             }
 
             try {
-                const res = await fetch('http://localhost:5000/api/users/me', {
+                const res = await fetch('http://16.170.229.152:5000/api/users/me', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (!res.ok) {
@@ -147,7 +147,7 @@
             }
 
             try {
-                const res = await fetch('http://localhost:5000/api/users/saved-temples', {
+                const res = await fetch('http://16.170.229.152:5000/api/users/saved-temples', {
                     headers: { 'Authorization': `Bearer ${localStorage.getItem('userToken')}` }
                 });
                 const temples = await res.json();
@@ -177,7 +177,7 @@
         async function unsaveTemple(templeId, btn) {
             const token = localStorage.getItem('userToken');
             try {
-                const res = await fetch(`http://localhost:5000/api/users/save-temple/${templeId}`, {
+                const res = await fetch(`http://16.170.229.152:5000/api/users/save-temple/${templeId}`, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });

@@ -115,5 +115,5 @@ Pilgrims and visitors often face challenges such as:
    ```
 
 ### Accessing the Portal
-- **Main Site:** `http://localhost:5000/` or open `client/index.html` locally.
+- **Main Site:** `http://16.170.229.152:5000/` or open `client/index.html` locally.
 - **Admin Dashboard:** Open `client/admin.html` and login to manage temples and circuits.

@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'http://16.170.229.152:5000/api';
 
 document.addEventListener('DOMContentLoaded', () => {
     checkAuth();
